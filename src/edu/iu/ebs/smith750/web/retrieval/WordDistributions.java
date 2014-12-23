@@ -1,8 +1,6 @@
 package edu.iu.ebs.smith750.web.retrieval;
 
-import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,21 +54,14 @@ public class WordDistributions {
 	
 	public static List<WordCount> calculateWordDistributions(String s) {
 		final Map<String, AtomicInteger> distributions = generateWordDistributions(s);
-		/*WordCount[] counts = (WordCount[])distributions.keySet().stream()
+		Object[] counts = distributions.keySet().parallelStream()
 								.map((String word) -> new WordCount(word, distributions.get(word).get()))
+								.sorted((WordCount a, WordCount b) -> b.getCount() - a.getCount())
 								.toArray();
-		  Arrays.sort(counts, (WordCount a, WordCount b) -> a.getCount() - b.getCount());
-		  return Arrays.asList(counts);
-		*/
-		List<WordCount> counts = new ArrayList<>();
-		for (String word : distributions.keySet()) {
-			counts.add(new WordCount(word, distributions.get(word).get()));
+		List<WordCount> wordCounts = new ArrayList<WordCount>();
+		for (Object count : counts) {
+			wordCounts.add((WordCount)count);
 		}
-		Collections.sort(counts, (WordCount a, WordCount b) -> b.getCount() - a.getCount());
-		/*WordCount[] counts = 
-				(WordCount[])distributions.keySet().stream()
-					.map((String word) -> new WordCount(word, distributions.get(word).get()))
-					.sorted((WordCount a, WordCount b) -> a.getCount() - b.getCount()).toArray();*/
-		return counts;
+		return wordCounts;
 	}
 }
