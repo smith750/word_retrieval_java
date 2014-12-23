@@ -11,27 +11,32 @@ import java.util.function.BiFunction;
 
 public class WordDistributions {
 	public static <T> T foldWords(String s, T memo, BiFunction<T, String, T> accumulator) {
-		T newMemo = memo;
-		int i = 0;
-		while (!isWordCharacter(s.charAt(i)) && i < s.length()) {
-			i += 1;
+		if (s == null || s.length() == 0) {
+			return memo;
 		}
-		int start = i;
-		int end = 0;
-		for (; i <= s.length(); i++) {
+		
+		T newMemo = memo;
+		int start = 0;
+		boolean wordMode = false;
+		for (int i = 0; i < s.length(); i++) {
 			if (!isWordCharacter(s.charAt(i))) {
-				if (end < start) {
+				if (wordMode) {
 					newMemo = accumulator.apply(newMemo, s.substring(start, i).toLowerCase());
-					end = i;
 				}
-				start = i;
+				start = i+1;
+				wordMode = false;
+			} else {
+				wordMode = true;
 			}
+		}
+		if (isWordCharacter(s.charAt(s.length()-1))) {
+			newMemo = accumulator.apply(newMemo, s.substring(start).toLowerCase());
 		}
 		return newMemo;
 	}
 	
 	public static boolean isWordCharacter(char i) {
-		return (i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '-';
+		return (i >= 'a' && i <= 'z') || (i >= 'A' && i <= 'Z') || i == '-' || i == '\'';
 	}
 	
 	public static Map<String, AtomicInteger> generateWordDistributions(String s) {

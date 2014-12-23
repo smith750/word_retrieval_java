@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WebRetrievalMain {
-	public static final int HIGH_COUNT = 10;
+	public static final int HIGH_COUNT = 100;
 	
 	public static void main(String[] args) {
 		final long start = System.currentTimeMillis();
@@ -16,12 +16,14 @@ public class WebRetrievalMain {
 		
 		TextRetriever.retrieveFullText(pages, (PageContents c) -> {
 			if (c.succeeded()) {
-				System.out.println(c.getPage().getName()+" succeeded.");
-				final List<WordCount> distributions = WordDistributions.calculateWordDistributions(c.getContents());
-				//System.out.println("Distinct word count: "+distributions.size());
-				final int highCount = (distributions.size() < HIGH_COUNT) ? distributions.size() : HIGH_COUNT;
-				for (int i = 0; i < highCount; i++) {
-					System.out.println(buildWordCountMessage(i+1, distributions.get(i)));
+				synchronized (c) {
+					System.out.println(c.getPage().getName()+" succeeded.");
+					final List<WordCount> distributions = WordDistributions.calculateWordDistributions(c.getContents());
+					//System.out.println("Distinct word count: "+distributions.size());
+					final int highCount = (distributions.size() < HIGH_COUNT) ? distributions.size() : HIGH_COUNT;
+					for (int i = 0; i < highCount; i++) {
+						System.out.println(buildWordCountMessage(i+1, distributions.get(i)));
+					}
 				}
 			} else {
 				System.out.println(c.getPage().getName()+" failed. Exception: "+c.getFailureMessage());
