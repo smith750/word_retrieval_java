@@ -18,9 +18,9 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>org.apache.httpcomponents</groupId>
-  		<artifactId>httpasyncclient</artifactId>
-  		<version>4.1-beta1</version>
-  	</dependency>
+	  <groupId>com.ning</groupId>
+	  <artifactId>async-http-client</artifactId>
+	  <version>1.9.3</version>
+	</dependency>
   </dependencies>
 </project>

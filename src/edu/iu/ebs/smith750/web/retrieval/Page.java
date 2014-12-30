@@ -1,7 +1,5 @@
 package edu.iu.ebs.smith750.web.retrieval;
 
-import org.apache.http.client.methods.HttpGet;
-
 public class Page {
 	private String name;
 	private String url;
@@ -17,9 +15,5 @@ public class Page {
 
 	public String getUrl() {
 		return url;
-	}
-	
-	public HttpGet buildGetRequest() {
-		return new HttpGet(getUrl());
 	}
 }

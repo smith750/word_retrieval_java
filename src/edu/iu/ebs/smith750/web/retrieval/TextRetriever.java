@@ -6,31 +6,24 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
+import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.Response;
 
 public class TextRetriever {
 	public static void retrieveFullText(List<Page> pages, Consumer<PageContents> pageHandler) {
-		RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(3000).setConnectTimeout(3000).build();
-	    CloseableHttpAsyncClient client = HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build();
+		AsyncHttpClient client = new AsyncHttpClient();
 
 	    try {
-			client.start();
 			final CountDownLatch latch = new CountDownLatch(pages.size());
 			pages.parallelStream().forEach((Page page) -> {
-				client.execute(page.buildGetRequest(), new FutureCallback<HttpResponse>() {
+				client.prepareGet(page.getUrl()).execute(new AsyncCompletionHandler<Response>() {
+
 					@Override
-					public void cancelled() {
-						latch.countDown();
-					}
-					@Override
-					public void completed(HttpResponse response) {
+					public Response onCompleted(Response response) {
 						ByteArrayOutputStream contents = new ByteArrayOutputStream();
 						try {
-							response.getEntity().writeTo(contents);
+							contents.write(response.getResponseBodyAsBytes());
 							pageHandler.accept(new PageContents(page, contents.toString()));
 						} catch (IOException ioe) {
 							pageHandler.accept(new PageContents(page, ioe));
@@ -42,22 +35,21 @@ public class TextRetriever {
 								contents = null;
 							}
 						}
+						return response;
 					}
+
 					@Override
-					public void failed(Exception ex) {
-						pageHandler.accept(new PageContents(page, ex));
-						latch.countDown();
+					public void onThrowable(Throwable t) {
+						if (t instanceof Exception) {
+							pageHandler.accept(new PageContents(page, (Exception)t));
+							latch.countDown();
+						}
 					}
+					
 				});
 			});
 			latch.await();
 		} catch (InterruptedException ie) {
-		} finally {
-			try {
-				client.close();
-			} catch (IOException ioe) {
-				throw new RuntimeException(ioe);
-			}
 		}
 	}
 }
